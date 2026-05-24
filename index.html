@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MAXWIN PH — Agent Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#07050a;color:#e8d080;font-family:'Inter',sans-serif;min-height:100vh;}
+  :root{--gold:#ffd700;--gold-dim:#b8860b;--card:#0f0a02;--card2:#1a1005;--green:#00e676;--blue:#4fc3f7;--red:#ff6b6b;--muted:#9a7a3a;--faint:#5a4010;--fainter:#3a2800;}
+  .oswald{font-family:'Oswald',sans-serif;}
+  .input-wrap{position:relative;margin-bottom:14px;}
+  .input-wrap input{width:100%;background:var(--card2);border:1px solid var(--fainter);border-radius:10px;color:var(--gold);padding:12px 42px 12px 38px;font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s;}
+  .input-wrap input:focus{border-color:var(--gold);}
+  .ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
+  .eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--faint);cursor:pointer;font-size:15px;padding:4px;}
+  .btn-gold{width:100%;background:linear-gradient(135deg,var(--gold-dim),var(--gold));border:none;border-radius:10px;color:#0a0700;font-weight:800;font-size:15px;padding:14px 0;cursor:pointer;letter-spacing:1px;font-family:'Inter',sans-serif;transition:opacity .2s,transform .1s;margin-top:4px;}
+  .btn-gold:hover{opacity:.92;} .btn-gold:active{transform:scale(.98);} .btn-gold:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-ghost{background:transparent;border:1px solid var(--fainter);border-radius:8px;color:var(--faint);font-size:12px;padding:8px 16px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;}
+  .btn-ghost:hover{border-color:var(--muted);color:var(--muted);}
+  .card{background:var(--card);border:1px solid var(--fainter);border-radius:20px;padding:24px 26px;}
+  .card-sm{background:var(--card);border:1px solid var(--fainter);border-radius:16px;padding:20px 22px;}
+  .badge{border-radius:999px;padding:3px 12px;font-size:12px;font-weight:700;letter-spacing:.5px;white-space:nowrap;}
+  .progress-track{background:#1a1208;border-radius:999px;height:14px;overflow:hidden;border:1px solid #3a2800;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold),var(--gold-dim));border-radius:999px;transition:width 1.2s cubic-bezier(.4,0,.2,1);}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;}
+  .stat-card{background:var(--card);border:1px solid var(--fainter);border-radius:16px;padding:20px 22px;}
+  .msg-box{margin-top:12px;font-size:13px;border-radius:8px;padding:12px 14px;line-height:1.7;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .info-row{font-size:13px;color:var(--muted);line-height:1.9;} .info-row b{color:var(--gold);}
+  .rule-row{font-size:12px;color:var(--muted);line-height:1.9;}
+  .footer-bar{background:var(--card);border:1px solid #2a1a00;border-radius:16px;padding:14px 20px;text-align:center;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;}
+  .hero-card{background:var(--card);border:1px solid #5a3d00;border-radius:20px;padding:24px 26px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+  .login-card{background:#0d0900;border:1px solid #3a2800;border-radius:24px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 0 60px #ffd70008;position:relative;overflow:hidden;}
+  .login-card::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,#ffd70015 0%,transparent 70%);pointer-events:none;}
+  .divider{height:1px;background:linear-gradient(90deg,transparent,#3a2800,transparent);margin:24px 0;}
+  .field-label{font-size:11px;color:var(--faint);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;font-weight:600;}
+  .shake{animation:shake .4s ease;}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+  @media(max-width:500px){.two-col{grid-template-columns:1fr;}.stat-grid{grid-template-columns:1fr 1fr;}}
+
+  /* Setup screen */
+  .setup-card{background:#0d0900;border:1px solid #3a2800;border-radius:24px;padding:32px 28px;width:100%;max-width:480px;}
+  .setup-step{display:flex;gap:14px;margin-bottom:20px;align-items:flex-start;}
+  .step-num{background:linear-gradient(135deg,var(--gold-dim),var(--gold));color:#0a0700;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;margin-top:2px;}
+  .step-body{font-size:13px;color:var(--muted);line-height:1.7;}
+  .step-body b{color:#e8d080;}
+  .step-body code{background:#1a1005;color:#ffd70099;padding:2px 7px;border-radius:4px;font-size:12px;border:1px solid #3a2800;}
+  .url-input{width:100%;background:var(--card2);border:1px solid var(--fainter);border-radius:10px;color:var(--gold);padding:11px 14px;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s;margin-top:8px;}
+  .url-input:focus{border-color:var(--gold);}
+  .url-input::placeholder{color:#3a2800;}
+</style>
+</head>
+<body>
+<div id="root" style="max-width:700px;margin:0 auto;padding:24px 16px;"></div>
+<script>
+
+// ══════════════════════════════════════════
+//  CONFIG — i-paste ang Apps Script URL mo
+// ══════════════════════════════════════════
+let APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZXe4-_Tqn1c4XakTf2W1k7dsJScLJZr37VrsXcX21HXesiheM_HLWGcn39TKvwxeSqw/exec';
+// ══════════════════════════════════════════
+
+const MAX_PTS     = 100;
+const PESO        = 50;
+const SESSION_KEY = 'mw_session';
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function badge(txt,color){ return `<span class="badge" style="background:${color}22;color:${color};border:1px solid ${color}55">${txt}</span>`; }
+function logo(){
+  return `<div style="text-align:center;margin-bottom:28px;">
+    <div style="font-size:44px;margin-bottom:8px;">🏆</div>
+    <div class="oswald" style="font-size:30px;font-weight:700;color:#ffd700;letter-spacing:3px;">MAXWIN PH</div>
+    <div style="font-size:11px;color:#5a4010;letter-spacing:2px;text-transform:uppercase;margin-top:3px;">Agent Points System</div>
+  </div>`;
+}
+
+// ── SETUP SCREEN ─────────────────────────────────────
+function showSetup(errMsg=''){
+  $('root').innerHTML=`
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:90vh;">
+    <div class="setup-card">
+      ${logo()}
+      <div style="font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.7;">
+        I-connect ang dashboard sa iyong Google Sheet gamit ang <b style="color:#e8d080;">Apps Script</b>.
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          Buksan ang iyong <b>Google Sheet</b> → click <b>Extensions</b> → <b>Apps Script</b>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          I-delete lahat ng laman ng editor, tapos <b>i-paste ang Code.gs</b> na kasama ng HTML file na ito. I-save (<code>Ctrl+S</code>).
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          Click <b>Deploy</b> → <b>New deployment</b> → Type: <b>Web app</b><br>
+          Execute as: <b>Me</b> | Who has access: <b>Anyone</b> → <b>Deploy</b><br>
+          I-authorize kung may pop-up.
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          Kopyahin ang <b>Web app URL</b> at i-paste dito:
+          <input class="url-input" id="urlInput" type="text" placeholder="https://script.google.com/macros/s/AKfy.../exec"/>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          Siguraduhing ang iyong sheet tab ay pinangalanang <b>Agents</b> at may mga columns:<br>
+          <code>Username</code> <code>Password</code> <code>Agent Name</code> <code>Agent Code</code> <code>Valid Players</code> <code>Points</code> <code>Withdrawn</code> <code>Balance</code> <code>Last Updated</code>
+        </div>
+      </div>
+
+      <button class="btn-gold" onclick="saveUrl()">🔗 I-CONNECT ANG SHEET</button>
+      ${errMsg ? `<div class="msg-box" style="color:var(--red);background:#200505;border:1px solid #3a0505;">${errMsg}</div>` : ''}
+    </div>
+  </div>`;
+
+  setTimeout(()=>{ const u=$('urlInput'); if(u) u.focus(); },100);
+  const ui = $('urlInput');
+  if(ui) ui.addEventListener('keydown', e=>{ if(e.key==='Enter') saveUrl(); });
+}
+
+async function saveUrl(){
+  const url = ($('urlInput').value||'').trim();
+  if(!url || !url.includes('script.google.com')){
+    const el=$('root').querySelector('.msg-box') || document.createElement('div');
+    showSetup('⚠️ Pakienter ang tamang Apps Script Web App URL.');
+    return;
+  }
+
+  const btn = $('root').querySelector('.btn-gold');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Testing connection...'; }
+
+  try {
+    const res = await fetch(`${url}?action=getAgents`, { redirect: 'follow' });
+    const data = await res.json();
+    if(data.success !== undefined){
+      APPS_SCRIPT_URL = url;
+      localStorage.setItem('mw_api_url', url);
+      showLogin();
+    } else {
+      showSetup('❌ Invalid response. Tiyaking tama ang Code.gs at naka-deploy.');
+    }
+  } catch(e) {
+    showSetup('❌ Hindi ma-reach ang Apps Script URL. Tiyaking naka-deploy at "Anyone" ang access.');
+  }
+}
+
+// ── LOGIN SCREEN ─────────────────────────────────────
+function showLogin(errMsg='', hint=''){
+  $('root').innerHTML=`
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:90vh;">
+    <div class="login-card">
+      ${logo()}
+      <div class="divider"></div>
+      <div class="field-label">Username</div>
+      <div class="input-wrap">
+        <span class="ico">👤</span>
+        <input id="uInput" type="text" placeholder="Ilagay ang username..." autocomplete="username" autocapitalize="none" spellcheck="false"/>
+      </div>
+      <div class="field-label">Password</div>
+      <div class="input-wrap">
+        <span class="ico">🔑</span>
+        <input id="pInput" type="password" placeholder="Ilagay ang password..." autocomplete="current-password"/>
+        <button class="eye-btn" onclick="togglePass()">👁</button>
+      </div>
+      <button class="btn-gold" id="loginBtn" onclick="doLogin()">🔓 MAG-LOGIN</button>
+      <div id="loginMsg">${errMsg ? `<div class="msg-box" style="color:var(--red);background:#200505;border:1px solid #3a0505;">${errMsg}</div>` : ''}</div>
+
+    </div>
+  </div>`;
+
+  ['uInput','pInput'].forEach(id=>{
+    const el=$(id);
+    if(el) el.addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+  });
+  setTimeout(()=>{ const u=$('uInput'); if(u) u.focus(); },100);
+}
+
+function togglePass(){
+  const i=$('pInput');
+  if(i) i.type = i.type==='password' ? 'text' : 'password';
+}
+
+// ── JSONP helper (works from file:// AND web server) ──
+function jsonpCall(url) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'mw_cb_' + Date.now();
+    const script  = document.createElement('script');
+    const timer   = setTimeout(() => {
+      cleanup();
+      reject(new Error('timeout'));
+    }, 15000);
+
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[cbName] = function(data) { cleanup(); resolve(data); };
+    script.onerror = function() { cleanup(); reject(new Error('network')); };
+    script.src = url + '&callback=' + cbName;
+    document.head.appendChild(script);
+  });
+}
+
+async function doLogin(){
+  const username = ($('uInput').value||'').trim();
+  const password = ($('pInput').value||'').trim();
+
+  if(!username||!password){
+    shakeCard(); setMsg('⚠️ Pakilagay ang username at password.','error'); return;
+  }
+
+  const btn=$('loginBtn');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Checking...'; }
+
+  try {
+    const url = APPS_SCRIPT_URL
+      + '?action=login'
+      + '&username=' + encodeURIComponent(username)
+      + '&password=' + encodeURIComponent(password);
+
+    const data = await jsonpCall(url);
+
+    if(data.success && data.agent){
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(data.agent));
+      showDashboard(data.agent);
+    } else {
+      shakeCard();
+      if(btn){ btn.disabled=false; btn.textContent='🔓 MAG-LOGIN'; }
+      if(data.userExists){
+        setMsg('🔑 Tama ang username pero <b>mali ang password</b>. Subukan ulit.','error');
+      } else {
+        setMsg('👤 Hindi nahanap ang username na "<b>'+esc(username)+'</b>". Tiyaking tama ang spelling.','error');
+      }
+    }
+  } catch(e) {
+    shakeCard();
+    if(btn){ btn.disabled=false; btn.textContent='🔓 MAG-LOGIN'; }
+    const msg = e.message === 'timeout'
+      ? '⏳ Timeout — mabagal ang koneksyon. Subukan ulit.'
+      : '❌ Hindi ma-reach ang server. I-check ang internet connection.';
+    setMsg(msg,'error');
+  }
+}
+
+function setMsg(html, type){
+  const el=$('loginMsg');
+  if(!el) return;
+  const s={error:'color:var(--red);background:#200505;border:1px solid #3a0505;',success:'color:var(--green);background:#002010;border:1px solid #005030;',info:'color:var(--gold);background:#201500;border:1px solid #3a2800;'};
+  el.innerHTML=`<div class="msg-box" style="${s[type]}">${html}</div>`;
+}
+
+function shakeCard(){
+  const c=document.querySelector('.login-card');
+  if(!c) return;
+  c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake');
+}
+
+// ── DASHBOARD ────────────────────────────────────────
+function showDashboard(a){
+  const g = (...keys) => { for(const k of keys){ if(a[k]!==undefined&&a[k]!=='') return a[k]; } return ''; };
+  const name   = g('Agent Name','agent_name','AgentName','Name') || 'Agent';
+  const code   = g('Agent Code','agent_code','AgentCode','Code') || '—';
+  const vp     = parseInt(g('Valid Players','valid_players','ValidPlayers')||0);
+  const pts    = Math.min(parseInt(g('Points','points')||0), MAX_PTS);
+  const earn   = pts * PESO;
+  const wdn    = parseFloat(g('Withdrawn','withdrawn')||0);
+  const bal    = parseFloat(g('Balance','balance')||(earn-wdn));
+  const upd    = g('Last Updated','last_updated','LastUpdated') || '—';
+  const pct    = (pts/MAX_PTS)*100;
+
+  $('root').innerHTML=`
+  <div>
+    <div class="topbar">
+      <div>
+        <div class="oswald" style="font-size:22px;font-weight:700;color:#ffd700;letter-spacing:2px;">🏆 MAXWIN PH</div>
+        <div style="font-size:11px;color:#5a4010;letter-spacing:2px;text-transform:uppercase;">Agent Points System</div>
+      </div>
+      <button class="btn-ghost" onclick="handleLogout()">↩ Logout</button>
+    </div>
+
+    <div class="hero-card">
+      <div>
+        <div style="font-size:11px;color:#6a5020;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;">Kamusta,</div>
+        <div class="oswald" style="font-size:32px;font-weight:700;color:#ffd700;line-height:1.1;">${esc(name)}</div>
+        <div style="font-size:12px;color:#5a4010;margin-top:6px;">Agent Code: <span style="color:#9a7a3a;font-weight:600;">${esc(code)}</span></div>
+      </div>
+      <div style="text-align:right;">
+        ${badge(pts>0?'✅ May Kita':'⏳ Wala Pa',pts>0?'#00e676':'#ff6b6b')}
+        <div style="font-size:11px;color:#4a3210;margin-top:10px;">🕒 ${esc(upd)}</div>
+      </div>
+    </div>
+
+    <div class="stat-grid" style="margin-bottom:20px;">
+      <div class="stat-card">
+        <div style="font-size:28px;margin-bottom:6px;">👥</div>
+        <div style="font-size:11px;color:#5a4010;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Valid Players</div>
+        <div class="oswald" style="font-size:28px;font-weight:700;color:#ffd700;margin:4px 0;">${vp}</div>
+        <div style="font-size:11px;color:#4a3010;">na-recruit mo</div>
+      </div>
+      <div class="stat-card">
+        <div style="font-size:28px;margin-bottom:6px;">🎯</div>
+        <div style="font-size:11px;color:#5a4010;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Points</div>
+        <div class="oswald" style="font-size:28px;font-weight:700;color:#ffd700;margin:4px 0;">${pts} <span style="font-size:15px;color:#4a3010;">/ ${MAX_PTS}</span></div>
+        <div style="font-size:11px;color:#4a3010;">${MAX_PTS-pts} pts pa para sa max</div>
+      </div>
+      <div class="stat-card">
+        <div style="font-size:28px;margin-bottom:6px;">💸</div>
+        <div style="font-size:11px;color:#5a4010;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Earnings</div>
+        <div class="oswald" style="font-size:28px;font-weight:700;color:#00e676;margin:4px 0;">₱${earn.toLocaleString()}</div>
+        <div style="font-size:11px;color:#4a3010;">₱${PESO} kada point</div>
+      </div>
+      <div class="stat-card">
+        <div style="font-size:28px;margin-bottom:6px;">💰</div>
+        <div style="font-size:11px;color:#5a4010;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Balance</div>
+        <div class="oswald" style="font-size:28px;font-weight:700;color:#4fc3f7;margin:4px 0;">₱${bal.toLocaleString()}</div>
+        <div style="font-size:11px;color:#4a3010;">Withdrawn: ₱${wdn.toLocaleString()}</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <span class="oswald" style="font-size:16px;color:#ffd700;letter-spacing:1px;">🎯 POINTS PROGRESS</span>
+        <span class="oswald" style="font-size:22px;color:#ffd700;font-weight:700;">${pct.toFixed(0)}%</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="pFill" style="width:0%;"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:#5a4010;">
+        <span>0 pts</span><span style="color:#9a7a3a;">${pts} pts earned</span><span>${MAX_PTS} pts MAX</span>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-bottom:20px;">
+      <div class="card-sm">
+        <div style="font-size:12px;color:#6a5020;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:600;">📌 Withdrawal Info</div>
+        <div class="info-row">📅 Cutoff: <b>Every 16th</b><br>💵 Rate: <b>₱50 / point</b><br>🔒 Max: <b>100 pts = ₱5,000</b><br>✅ Pwedeng i-stack hanggang 100!</div>
+      </div>
+      <div class="card-sm">
+        <div style="font-size:12px;color:#6a5020;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:600;">✅ Valid Player Rules</div>
+        <div class="rule-row">• New player lang (no duplicate)<br>• Min. ₱500 cash-in required<br>• Active na naglaro sa site<br>• Checked via IP &amp; device<br><span style="color:#ff6b6b;">• Fake accounts = HINDI counted ❌</span></div>
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      <span style="font-size:12px;color:#4a3210;">🔥 Invite lang nang invite ng legit players! &nbsp;|&nbsp; 1 Valid Player = 1 Point = ₱50 &nbsp;|&nbsp; <span style="color:#ffd70044;">MAXWIN PH ADMIN</span></span>
+    </div>
+  </div>`;
+
+  setTimeout(()=>{ const p=$('pFill'); if(p) p.style.width=pct+'%'; },150);
+}
+
+function handleLogout(){
+  sessionStorage.removeItem(SESSION_KEY);
+  showLogin();
+}
+
+// ── INIT ─────────────────────────────────────────────
+const saved = sessionStorage.getItem(SESSION_KEY);
+if(saved){
+  try{ showDashboard(JSON.parse(saved)); }
+  catch(e){ sessionStorage.removeItem(SESSION_KEY); APPS_SCRIPT_URL ? showLogin() : showSetup(); }
+} else {
+  APPS_SCRIPT_URL ? showLogin() : showSetup();
+}
+</script>
+</body>
+</html>
